@@ -1,28 +1,58 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Management;
+using System.IO.Ports;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Linq;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 
 namespace CSharpErgoBoard
 {
     public partial class id_main : Form
     {
-
+        // Base variables
         private String m_selectedKey = "NONE";
-        Logging m_logger = new Logging();
+        private Logging m_logger = new Logging();
+        private SystemMonitor m_monitor = new SystemMonitor();
+
+        // Configuration Variables. 
+        //TODO have this written to a text document and read it post shutdown. 
+
+        // Operational variables 
+        private SerialPort m_leftKeyboard = new SerialPort();
+        private Queue<String> m_leftKeyBoardQueue = new Queue<string>();    // Ouput Queue
+        private SerialPort m_leftLeds = new SerialPort();
+        private Queue<String> m_leftLedsQueue = new Queue<string>();    // Output Queue
+        private SerialPort m_rightKeyboard = new SerialPort();
+        private Queue<String> m_rightKeyBoardQueue = new Queue<string>();   // Output Queue
+        private SerialPort m_rightLeds = new SerialPort();
+        private Queue<String> m_rightLedsQueue = new Queue<string>();   // Output Queue
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public id_main()
+        {
+            m_logger.Log("Starting finding the avaible ports");
+            GetPorts();
+
+            m_logger.Log("Starting the program. ");
+            InitializeComponent();
+
+            m_logger.Log("by default start in light mode");
+            SelectLightMode();
+        }
 
         /// <summary>
         /// Finds a list of serial ports and their friendly descriptions and returns it. 
         /// </summary>
         /// <returns> A list of strings housing the COM ports and their friendly descriptions. </returns>
-        public List<String> GetPorts()
+        private List<String> GetPorts()
         {
             List<String> names = new List<string>();
             ManagementObjectSearcher searcher =
@@ -36,19 +66,6 @@ namespace CSharpErgoBoard
             }
 
             return names;
-        }
-
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public id_main()
-        {
-            //id_listboxLeftKeyComPort.Items() = sbyte;
-            IOConnect leftKeyboard = new IOConnect();
-            IOConnect rightKeyboard = new IOConnect();
-            m_logger.Log("Program Has started");
-            InitializeComponent();
-            //SelectLightMode();
         }
 
         /// <summary>
@@ -348,6 +365,8 @@ namespace CSharpErgoBoard
         /// <param name="e"></param>
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            //leftKeyboard.End();
+            m_monitor.End();
             m_logger.End();
         }
 
